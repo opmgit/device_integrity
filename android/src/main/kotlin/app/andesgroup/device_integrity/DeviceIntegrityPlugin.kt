@@ -8,6 +8,7 @@ import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
+import io.flutter.plugin.common.MethodChannel.Result
 
 /** DeviceIntegrityPlugin */
 class DeviceIntegrityPlugin : FlutterPlugin, MethodCallHandler {
@@ -26,12 +27,12 @@ class DeviceIntegrityPlugin : FlutterPlugin, MethodCallHandler {
 
     override fun onMethodCall(call: MethodCall, result: Result) {
         if (call.method == "getToken") {
-            if (call.argument<Long>("cloud_project_number") != null && call.argument<Long>("hash") != null) {
+            if (call.argument<Long>("cloud_project_number") != null && call.argument<String>("hash") != null) {
                 var deviceIntegrity = DeviceIntegrity(context, call.argument<Long>("cloud_project_number")!!)
                 deviceIntegrity.integrityTokenResponse.addOnSuccessListener { response ->
                     val integrityTokenResponse: Task<StandardIntegrityToken> = response.request(
                             StandardIntegrityManager.StandardIntegrityTokenRequest.builder()
-                                    .setRequestHash(call.argument<Long>("hash")!!)
+                                    .setRequestHash(call.argument<String>("hash")!!)
                                     .build())
                     integrityTokenResponse
                             .addOnSuccessListener { response -> result.success(response.token()) }
@@ -40,7 +41,7 @@ class DeviceIntegrityPlugin : FlutterPlugin, MethodCallHandler {
                     result.error("2", exception.message, null)
                 }
             } else {
-                result.error("3", "Missing parameters")
+                result.error("3", "Missing parameters", null)
             }
         } else {
             result.notImplemented()
